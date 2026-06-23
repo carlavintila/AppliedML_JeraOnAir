@@ -1,0 +1,12 @@
+google-api-python-client==2.194.0
+google-auth==2.49.2
+lightgbm==4.6.0
+matplotlib==3.10.9
+musicbrainzngs==0.7.1
+numpy==2.4.4
+openpyxl==3.1.5
+pandas==3.0.2
+redis==7.4.0
+requests==2.33.1
+scikit-learn==1.8.0
+spotipy==2.26.0
