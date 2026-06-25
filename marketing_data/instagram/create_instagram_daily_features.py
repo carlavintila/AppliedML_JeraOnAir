@@ -1,8 +1,6 @@
 import pandas as pd
 
-# =========================================================
 # LOAD FULL INSTAGRAM POST-LEVEL FILE
-# =========================================================
 input_file = "instagram_posts_clean_full_2019_2026.csv"
 df = pd.read_csv(input_file)
 
@@ -10,9 +8,7 @@ print("Loaded file shape:", df.shape)
 print("Columns:")
 print(df.columns.tolist())
 
-# =========================================================
 # CLEAN DATA TYPES
-# =========================================================
 df["publish_time"] = pd.to_datetime(df["publish_time"], errors="coerce", utc=True)
 
 # create sale_date in same style as your reference file: M/D/YYYY
@@ -28,9 +24,7 @@ numeric_cols = ["views", "reach", "likes", "shares", "comments", "saves", "follo
 for col in numeric_cols:
     df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
 
-# =========================================================
 # STANDARDIZE POST TYPES
-# =========================================================
 df["post_type"] = df["post_type"].fillna("").astype(str).str.strip()
 
 # post type indicator columns
@@ -50,9 +44,7 @@ df["ig_other_post"] = (~df["post_type"].isin([
 # each row is one post
 df["ig_post"] = 1
 
-# =========================================================
 # AGGREGATE TO DAILY FEATURES
-# =========================================================
 daily_df = df.groupby("sale_date", as_index=False).agg({
     "ig_post": "sum",
     "views": "sum",
@@ -69,9 +61,7 @@ daily_df = df.groupby("sale_date", as_index=False).agg({
     "ig_other_post": "sum"
 })
 
-# =========================================================
 # RENAME COLUMNS TO MATCH YOUR REFERENCE FILE
-# =========================================================
 daily_df = daily_df.rename(columns={
     "ig_post": "ig_posts_count",
     "views": "ig_views_sum",
@@ -88,9 +78,7 @@ daily_df = daily_df.rename(columns={
     "ig_other_post": "ig_other_posts_count"
 })
 
-# =========================================================
 # CREATE AVERAGE FEATURES
-# =========================================================
 daily_df["ig_avg_views_per_post"] = daily_df["ig_views_sum"] / daily_df["ig_posts_count"]
 daily_df["ig_avg_reach_per_post"] = daily_df["ig_reach_sum"] / daily_df["ig_posts_count"]
 daily_df["ig_avg_likes_per_post"] = daily_df["ig_likes_sum"] / daily_df["ig_posts_count"]
@@ -101,9 +89,7 @@ daily_df["ig_avg_saves_per_post"] = daily_df["ig_saves_sum"] / daily_df["ig_post
 # post exists flag
 daily_df["ig_has_post"] = (daily_df["ig_posts_count"] > 0).astype(int)
 
-# =========================================================
 # REORDER COLUMNS TO MATCH REFERENCE EXACTLY
-# =========================================================
 final_columns = [
     "sale_date",
     "ig_posts_count",
@@ -130,21 +116,15 @@ final_columns = [
 
 daily_df = daily_df[final_columns]
 
-# =========================================================
 # OPTIONAL: SORT BY REAL DATE
-# =========================================================
 daily_df["_sort_date"] = pd.to_datetime(daily_df["sale_date"], errors="coerce")
 daily_df = daily_df.sort_values("_sort_date").drop(columns="_sort_date").reset_index(drop=True)
 
-# =========================================================
 # SAVE OUTPUT
-# =========================================================
 output_file = "instagram_daily_features_full_2019_2026.csv"
 daily_df.to_csv(output_file, index=False)
 
-# =========================================================
 # VALIDATION
-# =========================================================
 print("\n✅ Daily features file created successfully!")
 print("Output file:", output_file)
 print("Shape:", daily_df.shape)
