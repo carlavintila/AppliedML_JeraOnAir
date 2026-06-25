@@ -1,9 +1,7 @@
 import pandas as pd
 import numpy as np
 
-# =========================================================
 # MERGE GROUPMATE EXTRA FEATURES INTO OUR MODELING DATASET
-# =========================================================
 
 our_file = "modeling_dataset_v1.csv"
 groupmate_file = "ticket_sales_12_41_22_05.csv"
@@ -11,9 +9,7 @@ groupmate_file = "ticket_sales_12_41_22_05.csv"
 output_file = "modeling_dataset_v2_with_groupmate_features.csv"
 report_file = "groupmate_feature_merge_report.csv"
 
-# =========================================================
 # LOAD FILES
-# =========================================================
 
 ours = pd.read_csv(our_file)
 group = pd.read_csv(groupmate_file)
@@ -25,9 +21,7 @@ print("=" * 80)
 print("\nOur dataset shape:", ours.shape)
 print("Groupmate dataset shape:", group.shape)
 
-# =========================================================
 # BASIC DATE VALIDATION
-# =========================================================
 
 ours["sale_date"] = pd.to_datetime(ours["sale_date"], errors="coerce")
 group["sale_date"] = pd.to_datetime(group["sale_date"], errors="coerce")
@@ -43,11 +37,7 @@ if ours["sale_date"].duplicated().sum() > 0:
 
 print("\nDate validation: PASSED")
 
-# =========================================================
-# DO NOT IMPORT THESE FROM GROUPMATE FILE
-# =========================================================
-# Reason:
-# These are already handled better in our leakage-safe pipeline.
+
 
 do_not_import_prefixes = [
     "ig_",
@@ -66,9 +56,7 @@ do_not_import_exact = [
     "ig_other_posts_count",
 ]
 
-# =========================================================
 # ADD CALENDAR FEATURES FROM OUR OWN MASTER TIMELINE
-# =========================================================
 # Better than importing them, because our file has the correct continuous calendar.
 
 ours["month"] = ours["sale_date"].dt.month
@@ -95,9 +83,7 @@ ours["sales_open_date"] = ours["sales_open_date"].dt.strftime("%Y-%m-%d")
 
 print("\nCalendar and sales-open features created from our own timeline.")
 
-# =========================================================
 # SELECT GROUPMATE ARTIST / LINEUP FEATURES ONLY
-# =========================================================
 
 candidate_groupmate_features = [
     "avg_popularity (0-100)",
@@ -135,9 +121,7 @@ if missing_groupmate_features:
     for col in missing_groupmate_features:
         print("-", col)
 
-# =========================================================
 # CHECK IF ARTIST FEATURES ARE STABLE PER FESTIVAL YEAR
-# =========================================================
 
 print("\n" + "=" * 80)
 print("FESTIVAL-YEAR STABILITY CHECK FOR GROUPMATE FEATURES")
@@ -169,9 +153,7 @@ if len(unstable_features) > 0:
 else:
     print("\nAll selected groupmate features are stable within festival_year.")
 
-# =========================================================
 # CREATE FESTIVAL-YEAR LEVEL GROUPMATE FEATURE TABLE
-# =========================================================
 
 group_year_features = (
     group[["festival_year"] + available_groupmate_features]
@@ -200,9 +182,7 @@ rename_map = {
 
 group_year_features = group_year_features.rename(columns=rename_map)
 
-# =========================================================
 # MERGE INTO OUR DATASET
-# =========================================================
 
 before_shape = ours.shape
 
@@ -215,9 +195,7 @@ merged = ours.merge(
 print("\nShape before merge:", before_shape)
 print("Shape after merge:", merged.shape)
 
-# =========================================================
 # VALIDATION
-# =========================================================
 
 print("\n" + "=" * 80)
 print("VALIDATION")
@@ -267,9 +245,7 @@ if len(missing_new) == 0:
 else:
     print(missing_new)
 
-# =========================================================
 # SAVE MERGE REPORT
-# =========================================================
 
 report_rows = []
 
@@ -284,10 +260,7 @@ for col in new_added_cols:
 report_df = pd.DataFrame(report_rows)
 report_df.to_csv(report_file, index=False)
 
-# =========================================================
 # FINAL CLEAN SAVE
-# =========================================================
-
 merged["sale_date"] = merged["sale_date"].dt.strftime("%Y-%m-%d")
 
 merged.to_csv(output_file, index=False)
