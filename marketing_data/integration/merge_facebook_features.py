@@ -1,19 +1,15 @@
 import pandas as pd
 import numpy as np
 
-# =========================================================
 # STEP 2B:
 # MERGE FACEBOOK DAILY FEATURES ONTO MASTER + INSTAGRAM DATASET
-# =========================================================
 
 master_file = "master_calendar_with_instagram_2022_2026.csv"
 facebook_file = "facebook_daily_features_full_2019_2026.csv"
 
 output_file = "master_calendar_with_instagram_facebook_2022_2026.csv"
 
-# =========================================================
 # LOAD FILES
-# =========================================================
 
 master = pd.read_csv(master_file)
 fb = pd.read_csv(facebook_file)
@@ -25,9 +21,7 @@ print("=" * 80)
 print("\nMaster + Instagram shape:", master.shape)
 print("Facebook daily shape:", fb.shape)
 
-# =========================================================
 # DATE COLUMN CHECKS
-# =========================================================
 
 if "sale_date" not in master.columns:
     raise ValueError("sale_date column missing in master file.")
@@ -59,9 +53,7 @@ if fb["date"].duplicated().sum() > 0:
 # Rename Facebook date column for clean merge
 fb = fb.rename(columns={"date": "sale_date"})
 
-# =========================================================
 # DATE COVERAGE CHECK
-# =========================================================
 
 master_dates = set(master["sale_date"].dt.date)
 fb_dates = set(fb["sale_date"].dt.date)
@@ -72,9 +64,7 @@ fb_outside_operational = len(fb_dates - master_dates)
 print("\nFacebook dates inside operational windows:", fb_inside_operational)
 print("Facebook dates outside operational windows:", fb_outside_operational)
 
-# =========================================================
 # IDENTIFY FACEBOOK FEATURE GROUPS
-# =========================================================
 
 fb_feature_columns = [col for col in fb.columns if col != "sale_date"]
 
@@ -109,9 +99,7 @@ fb_zero_fill_columns = [
 print("\nFacebook zero-fill columns:", len(fb_zero_fill_columns))
 print("Facebook NaN-preserve Meta columns:", len(fb_meta_nan_preserve_columns))
 
-# =========================================================
 # MERGE FACEBOOK ONTO MASTER DATASET
-# =========================================================
 
 merged = master.merge(
     fb,
@@ -121,16 +109,8 @@ merged = master.merge(
 
 print("\nMerged shape before filling:", merged.shape)
 
-# =========================================================
 # FILL FACEBOOK NO-ACTIVITY DAYS
-# =========================================================
-# Meaning:
-# If a date exists in the operational calendar but not in Facebook daily data,
-# that means no Facebook post/activity on that operational day.
-#
-# So normal Facebook activity features become 0.
-#
-# But sparse newer Meta features should preserve NaN when unavailable historically.
+
 
 for col in fb_zero_fill_columns:
     merged[col] = merged[col].fillna(0)
@@ -147,21 +127,6 @@ for flag_col in [
     if flag_col in merged.columns:
         merged[flag_col] = merged[flag_col].fillna(0)
 
-# Important:
-# Do NOT fill these Meta sum columns:
-# - fb_total_views_sum
-# - fb_organic_views_sum
-# - fb_promoted_views_sum
-# - fb_unique_impressions_sum
-# - fb_negative_feedback_sum
-# - fb_unique_negative_feedback_sum
-# - fb_has_promoted_views_posts_count
-#
-# They should remain NaN when feature unavailable.
-
-# =========================================================
-# VALIDATION AFTER MERGE
-# =========================================================
 
 print("\n" + "=" * 80)
 print("VALIDATION AFTER FACEBOOK MERGE")
@@ -187,12 +152,6 @@ if len(master) == len(merged):
 else:
     raise ValueError("Master row count changed after Facebook merge.")
 
-# =========================================================
-# FACEBOOK TOTAL VALIDATION
-# =========================================================
-# Note:
-# Totals may not match original Facebook file exactly,
-# because Facebook dates outside operational windows are intentionally excluded.
 
 print("\n" + "=" * 80)
 print("FACEBOOK FEATURE TOTAL VALIDATION")
@@ -222,9 +181,8 @@ for col in validation_cols:
             f"excluded outside windows: {difference}"
         )
 
-# =========================================================
 # FACEBOOK ACTIVITY ANALYSIS
-# =========================================================
+
 
 print("\n" + "=" * 80)
 print("FACEBOOK OPERATIONAL ACTIVITY ANALYSIS")
@@ -241,9 +199,7 @@ if "fb_posts_count" in merged.columns:
     print("Facebook posts inside operational windows:",
           int(merged["fb_posts_count"].sum()))
 
-# =========================================================
 # META NaN PRESERVATION CHECK
-# =========================================================
 
 print("\n" + "=" * 80)
 print("FACEBOOK META NaN PRESERVATION CHECK")
@@ -266,9 +222,7 @@ for col in meta_check_cols:
             merged[col].notna().sum()
         )
 
-# =========================================================
 # FINAL NULL INSPECTION
-# =========================================================
 
 print("\n" + "=" * 80)
 print("FINAL NULL INSPECTION")
@@ -283,9 +237,7 @@ else:
     print("Remaining null values:")
     print(remaining_nulls)
 
-# =========================================================
 # PREVIEW OUTPUT
-# =========================================================
 
 print("\n" + "=" * 80)
 print("PREVIEW OF FINAL MERGED DATASET")
@@ -295,9 +247,7 @@ print(merged.head())
 
 print("\nFinal column count:", len(merged.columns))
 
-# =========================================================
 # SAVE FILE
-# =========================================================
 
 merged["sale_date"] = merged["sale_date"].dt.strftime("%Y-%m-%d")
 
