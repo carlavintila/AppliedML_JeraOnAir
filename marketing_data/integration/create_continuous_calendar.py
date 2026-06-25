@@ -1,17 +1,13 @@
 import pandas as pd
 import numpy as np
 
-# =========================================================
 # STEP 1B:
 # BUILD TRUE CONTINUOUS MASTER OPERATIONAL CALENDAR
-# =========================================================
 
 input_file = "master_ticket_operational_calendar_2022_2026.csv"
 output_file = "master_operational_calendar_continuous_2022_2026.csv"
 
-# =========================================================
 # LOAD DATA
-# =========================================================
 
 df = pd.read_csv(input_file)
 
@@ -25,9 +21,7 @@ print(df.shape)
 print("\nOriginal columns:")
 print(df.columns.tolist())
 
-# =========================================================
 # VALIDATE REQUIRED COLUMNS
-# =========================================================
 
 required_columns = [
     "sale_date",
@@ -46,9 +40,7 @@ if missing_cols:
 
 print("\nRequired column check passed.")
 
-# =========================================================
 # PARSE AND CLEAN BASIC COLUMNS
-# =========================================================
 
 df["sale_date"] = pd.to_datetime(df["sale_date"], errors="coerce")
 
@@ -67,9 +59,7 @@ df["is_event_day"] = pd.to_numeric(df["is_event_day"], errors="coerce").fillna(0
 # Mark rows that came from the original ticket files
 df["was_original_ticket_row"] = 1
 
-# =========================================================
 # BUILD CONTINUOUS CALENDAR PER FESTIVAL YEAR
-# =========================================================
 
 continuous_parts = []
 
@@ -117,9 +107,7 @@ for festival_year, group in df.groupby("festival_year"):
     # Recalculate actual calendar year
     merged["actual_calendar_year"] = merged["sale_date"].dt.year
 
-    # =====================================================
     # Recalculate days_to_event
-    # =====================================================
     # Event start date is the first date where is_event_day == 1.
     # For incomplete 2026, there is no event day yet.
     # In that case, infer event start date from existing days_to_event:
@@ -177,20 +165,14 @@ for festival_year, group in df.groupby("festival_year"):
 
     continuous_parts.append(merged)
 
-# =========================================================
 # COMBINE ALL FESTIVAL YEARS
-# =========================================================
-
 master_continuous = pd.concat(continuous_parts, ignore_index=True)
 
 master_continuous = master_continuous.sort_values(
     ["festival_year", "sale_date"]
 ).reset_index(drop=True)
 
-# =========================================================
 # FINAL VALIDATION
-# =========================================================
-
 print("\n" + "=" * 80)
 print("FINAL CONTINUOUS MASTER CALENDAR VALIDATION")
 print("=" * 80)
@@ -246,9 +228,7 @@ if original_rows == preserved_rows:
 else:
     raise ValueError("Original ticket row count changed after calendar expansion.")
 
-# =========================================================
 # SAVE FILE
-# =========================================================
 
 master_continuous["sale_date"] = master_continuous["sale_date"].dt.strftime("%Y-%m-%d")
 
