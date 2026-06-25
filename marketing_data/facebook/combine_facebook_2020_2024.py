@@ -1,9 +1,7 @@
 import pandas as pd
 import os
 
-# =========================================================
 # INPUT FILES
-# =========================================================
 input_files = [
     "facebook_posts_clean_2020.csv",
     "facebook_posts_clean_2021.csv",
@@ -12,14 +10,10 @@ input_files = [
     "facebook_posts_clean_2024.csv",
 ]
 
-# =========================================================
 # OUTPUT FILE
-# =========================================================
 output_file = "facebook_posts_clean_2020_2024.csv"
 
-# =========================================================
 # LOAD AND CHECK FILES
-# =========================================================
 dataframes = []
 base_columns = None
 
@@ -65,18 +59,14 @@ for file in input_files:
 
     dataframes.append(df)
 
-# =========================================================
 # COMBINE FILES
-# =========================================================
 combined_df = pd.concat(dataframes, ignore_index=True)
 
 print("\n" + "=" * 70)
 print("MERGE COMPLETE")
 print("Combined shape:", combined_df.shape)
 
-# =========================================================
 # VALIDATION AFTER MERGING
-# =========================================================
 expected_rows = sum(len(df) for df in dataframes)
 actual_rows = len(combined_df)
 
@@ -100,9 +90,7 @@ if "post_id" in combined_df.columns:
 parsed_dates = pd.to_datetime(combined_df["publish_time"], errors="coerce")
 print("Unparseable publish_time values:", parsed_dates.isna().sum())
 
-# =========================================================
 # SAVE OUTPUT
-# =========================================================
 combined_df.to_csv(output_file, index=False)
 
 print("\nSaved combined file as:")

@@ -1,19 +1,15 @@
 import pandas as pd
 import numpy as np
 
-# =========================================================
 # STEP 3B:
 # ADD POST TYPE COUNTS + CATEGORICAL FEATURES
-# =========================================================
 
 post_file = "facebook_posts_clean_all_years_sorted.csv"
 step3a_file = "facebook_daily_features_step3A_core.csv"
 
 output_file = "facebook_daily_features_step3B_categorical.csv"
 
-# =========================================================
 # LOAD FILES
-# =========================================================
 
 posts = pd.read_csv(post_file)
 daily = pd.read_csv(step3a_file)
@@ -25,9 +21,7 @@ print("=" * 80)
 print("\nPost-level shape:", posts.shape)
 print("Step 3A daily shape:", daily.shape)
 
-# =========================================================
 # VALIDATE REQUIRED COLUMNS
-# =========================================================
 
 required_post_columns = [
     "publish_time",
@@ -54,9 +48,7 @@ if missing_daily_cols:
 
 print("\nRequired column checks passed.")
 
-# =========================================================
 # CREATE DATE COLUMN FROM PUBLISH_TIME
-# =========================================================
 
 posts["publish_time_parsed"] = pd.to_datetime(
     posts["publish_time"],
@@ -74,9 +66,7 @@ if bad_dates > 0:
 posts["date"] = posts["publish_time_parsed"].dt.date.astype(str)
 daily["date"] = pd.to_datetime(daily["date"], errors="coerce").dt.date.astype(str)
 
-# =========================================================
 # POST TYPE COUNTS
-# =========================================================
 
 print("\n" + "=" * 80)
 print("POST TYPE INSPECTION")
@@ -118,9 +108,7 @@ print("\nPost type count columns created:")
 for col in post_type_counts.columns:
     print("-", col)
 
-# =========================================================
 # CROSSPOSTED FEATURES
-# =========================================================
 # Important:
 # Missing is_crossposted does not automatically mean 0.
 # So we create both:
@@ -143,9 +131,7 @@ crossposted_daily["fb_crossposted_data_available"] = np.where(
     0
 )
 
-# =========================================================
 # AVERAGE SECONDS VIEWED
-# =========================================================
 # This is already an average at post level.
 # So daily aggregation should use mean, not sum.
 
@@ -158,17 +144,13 @@ avg_seconds_daily = posts.groupby("date").agg(
     fb_avg_seconds_viewed_mean=("avg_seconds_viewed_numeric", "mean")
 ).reset_index()
 
-# =========================================================
 # SOURCE FILE TRACEABILITY
-# =========================================================
 
 source_trace_daily = posts.groupby("date").agg(
     fb_source_files_count=("source_file", "nunique")
 ).reset_index()
 
-# =========================================================
 # MERGE ALL STEP 3B FEATURES INTO STEP 3A
-# =========================================================
 
 daily_3b = daily.copy()
 
@@ -196,9 +178,7 @@ daily_3b = daily_3b.merge(
     how="left"
 )
 
-# =========================================================
 # FILL SAFE COUNT FEATURES
-# =========================================================
 
 count_columns_to_fill = [
     col for col in daily_3b.columns
@@ -213,9 +193,7 @@ daily_3b["fb_source_files_count"] = daily_3b["fb_source_files_count"].fillna(0)
 # Do NOT fill fb_avg_seconds_viewed_mean with 0.
 # It is an average feature and should remain NaN if unavailable.
 
-# =========================================================
 # VALIDATION
-# =========================================================
 
 print("\n" + "=" * 80)
 print("VALIDATION AFTER STEP 3B")
@@ -272,9 +250,7 @@ else:
 # Remove temporary validation column
 daily_3b = daily_3b.drop(columns=["fb_post_type_total_check"])
 
-# =========================================================
 # PREVIEW
-# =========================================================
 
 print("\n" + "=" * 80)
 print("PREVIEW OF STEP 3B OUTPUT")
@@ -288,9 +264,7 @@ new_columns = [col for col in daily_3b.columns if col not in daily.columns]
 for col in new_columns:
     print("-", col)
 
-# =========================================================
 # SAVE FILE
-# =========================================================
 
 daily_3b.to_csv(output_file, index=False)
 

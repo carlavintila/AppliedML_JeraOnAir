@@ -1,23 +1,17 @@
 import pandas as pd
 
-# =========================================================
 # INPUT / OUTPUT
-# =========================================================
 input_file = "Online Marketing Sep-01-2024_Sep-01-2025.xlsx"
 output_file = "facebook_posts_clean_sep2024_sep2025.csv"
 
-# =========================================================
 # LOAD RAW FILE
-# =========================================================
 df = pd.read_excel(input_file)
 
 print("Original shape:", df.shape)
 print("Original columns:")
 print(df.columns.tolist())
 
-# =========================================================
 # STANDARDIZE DUPLICATE COLUMN NAMES SAFELY
-# =========================================================
 def make_unique_columns(columns):
     seen = {}
     new_columns = []
@@ -34,9 +28,7 @@ def make_unique_columns(columns):
 
 df.columns = make_unique_columns(df.columns)
 
-# =========================================================
 # COLUMN MAPPING FOR SEP 2024 - SEP 2025 FILE
-# =========================================================
 column_mapping = {
     "Post ID": "post_id",
     "Page ID": "page_id",
@@ -94,9 +86,7 @@ df = df[existing_cols].copy()
 # rename
 df = df.rename(columns=column_mapping)
 
-# =========================================================
 # STANDARD CLEAN SCHEMA
-# =========================================================
 expected_cols = [
     "post_id",
     "page_id",
@@ -206,9 +196,7 @@ text_cols = [
     "sponsored_content_status"
 ]
 
-# =========================================================
 # CREATE MISSING COLUMNS SAFELY
-# =========================================================
 for col in expected_cols:
     if col not in df.columns:
         if col in numeric_cols:
@@ -220,9 +208,7 @@ for col in expected_cols:
         else:
             df[col] = ""
 
-# =========================================================
 # CLEAN DATE
-# =========================================================
 df["publish_time"] = pd.to_datetime(df["publish_time"], errors="coerce")
 
 df["post_date"] = (
@@ -233,27 +219,19 @@ df["post_date"] = (
 
 df.loc[df["publish_time"].isna(), "post_date"] = ""
 
-# =========================================================
 # CLEAN NUMERIC COLUMNS
-# =========================================================
 for col in numeric_cols:
     df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
 
-# =========================================================
 # CREATE FLAGS
-# =========================================================
 df["has_promoted_reach"] = (df["promoted_reach"] > 0).astype(int)
 df["has_promoted_views"] = (df["promoted_views"] > 0).astype(int)
 
-# =========================================================
 # CLEAN TEXT COLUMNS
-# =========================================================
 for col in text_cols:
     df[col] = df[col].fillna("").astype(str).str.strip()
 
-# =========================================================
 # STANDARDIZE FACEBOOK POST TYPES
-# =========================================================
 def clean_facebook_post_type(x):
     x = str(x).lower().strip()
 
@@ -270,19 +248,13 @@ def clean_facebook_post_type(x):
 
 df["post_type"] = df["post_type"].apply(clean_facebook_post_type)
 
-# =========================================================
 # FINAL ORDER
-# =========================================================
 df = df[expected_cols]
 
-# =========================================================
 # SAVE
-# =========================================================
 df.to_csv(output_file, index=False)
 
-# =========================================================
 # VALIDATION
-# =========================================================
 print("\nSaved:", output_file)
 print("Final shape:", df.shape)
 

@@ -1,10 +1,8 @@
 import pandas as pd
 import numpy as np
 
-# =========================================================
 # STEP 3A:
 # CREATE CORE FACEBOOK DAILY FEATURES
-# =========================================================
 
 # Input file
 input_file = "facebook_posts_clean_all_years_sorted.csv"
@@ -12,9 +10,7 @@ input_file = "facebook_posts_clean_all_years_sorted.csv"
 # Output file for this stage only
 output_file = "facebook_daily_features_step3A_core.csv"
 
-# =========================================================
 # LOAD DATA
-# =========================================================
 
 df = pd.read_csv(input_file)
 
@@ -25,9 +21,7 @@ print("=" * 80)
 print("\nOriginal Facebook post-level shape:")
 print(df.shape)
 
-# =========================================================
 # VALIDATE REQUIRED COLUMNS
-# =========================================================
 
 required_columns = [
     "publish_time",
@@ -68,9 +62,7 @@ if len(missing_required) > 0:
 
 print("\nRequired column check passed.")
 
-# =========================================================
 # BASIC DATA INTEGRITY CHECKS
-# =========================================================
 
 print("\n" + "=" * 80)
 print("POST-LEVEL VALIDATION BEFORE AGGREGATION")
@@ -87,9 +79,7 @@ if df["permalink"].duplicated().sum() > 0:
         "Duplicate permalinks found. Stop and inspect before daily aggregation."
     )
 
-# =========================================================
 # PARSE DATES SAFELY
-# =========================================================
 
 df["publish_time_parsed"] = pd.to_datetime(
     df["publish_time"],
@@ -115,9 +105,7 @@ df["date"] = df["publish_time_parsed"].dt.date
 print("Earliest Facebook date:", df["date"].min())
 print("Latest Facebook date:", df["date"].max())
 
-# =========================================================
 # CORE NUMERIC COLUMNS
-# =========================================================
 # These columns have stable historical coverage.
 # Missing values are safe to fill with 0 before daily summing.
 
@@ -148,9 +136,7 @@ core_sum_columns = [
 for col in core_sum_columns:
     df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
 
-# =========================================================
 # DAILY CORE AGGREGATION
-# =========================================================
 
 daily_core = df.groupby("date").agg(
 
@@ -192,9 +178,7 @@ daily_core = df.groupby("date").agg(
 
 ).reset_index()
 
-# =========================================================
 # AVERAGE PER POST FEATURES
-# =========================================================
 
 daily_core["fb_avg_engagement_per_post"] = (
     daily_core["fb_total_engagement_sum"] / daily_core["fb_posts_count"]
@@ -227,17 +211,13 @@ daily_core["fb_avg_seconds_watched_per_post"] = (
 # Simple flag
 daily_core["fb_has_post"] = 1
 
-# =========================================================
 # SORT DAILY DATA
-# =========================================================
 
 daily_core["date_sort"] = pd.to_datetime(daily_core["date"], errors="coerce")
 daily_core = daily_core.sort_values("date_sort")
 daily_core = daily_core.drop(columns=["date_sort"])
 
-# =========================================================
 # VALIDATION AFTER AGGREGATION
-# =========================================================
 
 print("\n" + "=" * 80)
 print("VALIDATION AFTER STEP 3A DAILY AGGREGATION")
@@ -303,9 +283,7 @@ for original_col, daily_col in validation_columns.items():
 
 print("\nCore numeric sum validation: PASSED")
 
-# =========================================================
 # PREVIEW OUTPUT
-# =========================================================
 
 print("\n" + "=" * 80)
 print("PREVIEW OF STEP 3A OUTPUT")
@@ -317,9 +295,7 @@ print("\nColumns created:")
 for col in daily_core.columns:
     print("-", col)
 
-# =========================================================
 # SAVE FILE
-# =========================================================
 
 daily_core.to_csv(output_file, index=False)
 

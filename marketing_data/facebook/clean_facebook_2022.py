@@ -1,23 +1,17 @@
 import pandas as pd
 
-# =========================================================
 # INPUT / OUTPUT
-# =========================================================
 input_file = "FACEBOOK Jan-01-2022_Dec-31-2022_1496968885408645.xlsx"
 output_file = "facebook_posts_clean_2022.csv"
 
-# =========================================================
 # LOAD RAW FILE
-# =========================================================
 df = pd.read_excel(input_file)
 
 print("Original shape:", df.shape)
 print("Original columns:")
 print(df.columns.tolist())
 
-# =========================================================
 # COLUMN MAPPING FOR 2022 FACEBOOK FILE
-# =========================================================
 column_mapping = {
     "Post ID": "post_id",
     "Page ID": "page_id",
@@ -57,9 +51,7 @@ df = df[existing_cols].copy()
 # rename columns
 df = df.rename(columns=column_mapping)
 
-# =========================================================
 # STANDARD FACEBOOK CLEAN SCHEMA
-# =========================================================
 expected_cols = [
     "post_id",
     "page_id",
@@ -137,9 +129,7 @@ text_cols = [
     "is_crossposted"
 ]
 
-# =========================================================
 # CREATE MISSING COLUMNS SAFELY
-# =========================================================
 for col in expected_cols:
     if col not in df.columns:
         if col in numeric_cols:
@@ -151,9 +141,7 @@ for col in expected_cols:
         else:
             df[col] = ""
 
-# =========================================================
 # CLEAN DATE
-# =========================================================
 df["publish_time"] = pd.to_datetime(df["publish_time"], errors="coerce")
 
 df["post_date"] = (
@@ -164,24 +152,18 @@ df["post_date"] = (
 
 df.loc[df["publish_time"].isna(), "post_date"] = ""
 
-# =========================================================
 # CLEAN NUMERIC COLUMNS
-# =========================================================
 for col in numeric_cols:
     df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
 
 # 2022 only has total reach, not organic/promoted reach
 df["has_promoted_reach"] = (df["promoted_reach"] > 0).astype(int)
 
-# =========================================================
 # CLEAN TEXT COLUMNS
-# =========================================================
 for col in text_cols:
     df[col] = df[col].fillna("").astype(str).str.strip()
 
-# =========================================================
 # STANDARDIZE FACEBOOK POST TYPES
-# =========================================================
 def clean_facebook_post_type(x):
     x = str(x).lower().strip()
 
@@ -198,19 +180,13 @@ def clean_facebook_post_type(x):
 
 df["post_type"] = df["post_type"].apply(clean_facebook_post_type)
 
-# =========================================================
 # FINAL COLUMN ORDER
-# =========================================================
 df = df[expected_cols]
 
-# =========================================================
 # SAVE CLEAN FILE
-# =========================================================
 df.to_csv(output_file, index=False)
 
-# =========================================================
 # VALIDATION OUTPUT
-# =========================================================
 print("\nSaved:", output_file)
 print("Final shape:", df.shape)
 

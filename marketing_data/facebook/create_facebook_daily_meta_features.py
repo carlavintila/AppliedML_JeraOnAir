@@ -1,10 +1,8 @@
 import pandas as pd
 import numpy as np
 
-# =========================================================
 # STEP 3C:
 # ADD NEWER META FEATURES WITH SAFE NaN PRESERVATION
-# =========================================================
 
 post_file = "facebook_posts_clean_all_years_sorted.csv"
 
@@ -12,9 +10,7 @@ step3b_file = "facebook_daily_features_step3B_categorical.csv"
 
 output_file = "facebook_daily_features_full_2019_2026.csv"
 
-# =========================================================
 # LOAD FILES
-# =========================================================
 
 posts = pd.read_csv(post_file)
 
@@ -27,9 +23,7 @@ print("=" * 80)
 print("\nPost-level shape:", posts.shape)
 print("Step 3B shape:", daily.shape)
 
-# =========================================================
 # VALIDATE REQUIRED COLUMNS
-# =========================================================
 
 required_meta_columns = [
     "publish_time",
@@ -55,9 +49,7 @@ if len(missing_cols) > 0:
 
 print("\nRequired Meta column check passed.")
 
-# =========================================================
 # CREATE DATE COLUMN
-# =========================================================
 
 posts["publish_time_parsed"] = pd.to_datetime(
     posts["publish_time"],
@@ -79,9 +71,7 @@ daily["date"] = pd.to_datetime(
     errors="coerce"
 ).dt.date.astype(str)
 
-# =========================================================
 # DEFINE NEWER META FEATURES
-# =========================================================
 # Important:
 # These features only exist in newer Meta exports.
 # Missing historically does NOT mean zero.
@@ -97,9 +87,7 @@ meta_feature_columns = [
     "has_promoted_views"
 ]
 
-# =========================================================
 # CONVERT TO NUMERIC
-# =========================================================
 
 for col in meta_feature_columns:
 
@@ -108,9 +96,7 @@ for col in meta_feature_columns:
         errors="coerce"
     )
 
-# =========================================================
 # CREATE DAILY META FEATURES
-# =========================================================
 
 daily_meta = posts.groupby("date").agg(
 
@@ -132,15 +118,7 @@ daily_meta = posts.groupby("date").agg(
 
 ).reset_index()
 
-# =========================================================
 # PRESERVE HISTORICAL MISSINGNESS
-# =========================================================
-# Important engineering logic:
-#
-# If a feature has NO available data for that day,
-# preserve NaN instead of forcing zero.
-#
-# This protects historical integrity.
 
 # Total views group
 view_columns = [
@@ -173,9 +151,7 @@ for col in negative_feedback_columns:
         daily_meta[col]
     )
 
-# =========================================================
 # CREATE DATA AVAILABILITY FLAGS
-# =========================================================
 
 daily_meta["fb_views_data_available"] = np.where(
     daily_meta["fb_total_views_data_available_posts"] > 0,
@@ -189,9 +165,7 @@ daily_meta["fb_negative_feedback_data_available"] = np.where(
     0
 )
 
-# =========================================================
 # MERGE INTO STEP 3B DATASET
-# =========================================================
 
 final_daily = daily.merge(
     daily_meta,
@@ -199,9 +173,7 @@ final_daily = daily.merge(
     how="left"
 )
 
-# =========================================================
 # VALIDATION
-# =========================================================
 
 print("\n" + "=" * 80)
 print("VALIDATION AFTER STEP 3C")
@@ -216,9 +188,7 @@ print("Missing dates:", final_daily["date"].isna().sum())
 if final_daily["date"].duplicated().sum() > 0:
     raise ValueError("Duplicate dates created after Step 3C merge.")
 
-# =========================================================
 # VALIDATE HISTORICAL NaN PRESERVATION
-# =========================================================
 
 print("\n" + "=" * 80)
 print("HISTORICAL NaN PRESERVATION CHECK")
@@ -245,9 +215,7 @@ for col in meta_validation_columns:
         non_nan_count
     )
 
-# =========================================================
 # VALIDATE TOTAL AVAILABLE POSTS
-# =========================================================
 
 print("\n" + "=" * 80)
 print("NEWER META COVERAGE VALIDATION")
@@ -265,9 +233,7 @@ if original_meta_posts == daily_meta_posts:
 else:
     raise ValueError("Mismatch in Meta feature coverage counts.")
 
-# =========================================================
 # PREVIEW OUTPUT
-# =========================================================
 
 print("\n" + "=" * 80)
 print("PREVIEW OF FINAL FACEBOOK DAILY DATASET")
@@ -285,9 +251,7 @@ new_cols = [
 for col in new_cols:
     print("-", col)
 
-# =========================================================
 # FINAL DATASET VALIDATION
-# =========================================================
 
 print("\n" + "=" * 80)
 print("FINAL FACEBOOK DAILY DATASET VALIDATION")
@@ -304,9 +268,7 @@ print("Total Facebook daily rows:", len(final_daily))
 print("Total Facebook posts represented:",
       final_daily["fb_posts_count"].sum())
 
-# =========================================================
 # SAVE FINAL FACEBOOK DAILY FEATURES
-# =========================================================
 
 final_daily.to_csv(output_file, index=False)
 
