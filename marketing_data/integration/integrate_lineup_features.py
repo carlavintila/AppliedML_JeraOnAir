@@ -1,8 +1,6 @@
 import pandas as pd
 
-# =========================================================
 # CREATE MODELING DATASET V1
-# =========================================================
 
 input_file = "master_calendar_with_temporal_features_2022_2026_FIXED.csv"
 output_file = "modeling_dataset_v1.csv"
@@ -15,9 +13,8 @@ print("=" * 80)
 
 print("\nOriginal shape:", df.shape)
 
-# =========================================================
+
 # COLUMNS TO REMOVE FOR FIRST BASELINE MODEL
-# =========================================================
 
 columns_to_remove = [
     # Zero-variance Instagram columns
@@ -47,17 +44,13 @@ if missing_remove_cols:
     for col in missing_remove_cols:
         print("-", col)
 
-# =========================================================
 # CREATE MODELING DATASET
-# =========================================================
 
 model_df = df.drop(columns=existing_remove_cols)
 
 print("\nNew shape:", model_df.shape)
 
-# =========================================================
 # VALIDATION
-# =========================================================
 
 print("\nDuplicate sale_date:", model_df["sale_date"].duplicated().sum())
 print("Missing sale_date:", model_df["sale_date"].isna().sum())
@@ -82,9 +75,7 @@ print("\nTarget check:")
 print("tickets_sold column exists:", "tickets_sold" in model_df.columns)
 print("Total tickets_sold:", model_df["tickets_sold"].sum())
 
-# =========================================================
 # SAVE FILE
-# =========================================================
 
 model_df.to_csv(output_file, index=False)
 
