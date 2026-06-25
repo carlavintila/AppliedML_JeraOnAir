@@ -1,10 +1,8 @@
 import pandas as pd
 import numpy as np
 
-# =========================================================
 # STEP 2A:
 # MERGE INSTAGRAM FEATURES ONTO MASTER OPERATIONAL CALENDAR
-# =========================================================
 
 master_file = "master_operational_calendar_continuous_2022_2026.csv"
 
@@ -12,9 +10,7 @@ instagram_file = "instagram_daily_features_full_2019_2026.csv"
 
 output_file = "master_calendar_with_instagram_2022_2026.csv"
 
-# =========================================================
 # LOAD FILES
-# =========================================================
 
 master = pd.read_csv(master_file)
 
@@ -27,9 +23,7 @@ print("=" * 80)
 print("\nMaster calendar shape:", master.shape)
 print("Instagram daily shape:", ig.shape)
 
-# =========================================================
 # VALIDATE REQUIRED DATE COLUMNS
-# =========================================================
 
 if "sale_date" not in master.columns:
     raise ValueError("sale_date missing in master calendar")
@@ -37,9 +31,7 @@ if "sale_date" not in master.columns:
 if "sale_date" not in ig.columns:
     raise ValueError("sale_date missing in Instagram file")
 
-# =========================================================
 # PARSE DATES
-# =========================================================
 
 master["sale_date"] = pd.to_datetime(
     master["sale_date"],
@@ -63,9 +55,7 @@ if master_bad_dates > 0:
 if ig_bad_dates > 0:
     raise ValueError("Instagram file contains bad dates.")
 
-# =========================================================
 # DUPLICATE DATE VALIDATION
-# =========================================================
 
 master_duplicates = master["sale_date"].duplicated().sum()
 
@@ -80,9 +70,7 @@ if master_duplicates > 0:
 if ig_duplicates > 0:
     raise ValueError("Instagram file contains duplicate dates.")
 
-# =========================================================
 # INSPECT DATE COVERAGE
-# =========================================================
 
 master_dates = set(master["sale_date"].dt.date)
 
@@ -95,9 +83,7 @@ ig_outside_operational = len(ig_dates - master_dates)
 print("\nInstagram dates inside operational windows:", ig_inside_operational)
 print("Instagram dates outside operational windows:", ig_outside_operational)
 
-# =========================================================
 # IDENTIFY INSTAGRAM FEATURE COLUMNS
-# =========================================================
 
 ig_feature_columns = [
     col for col in ig.columns
@@ -106,9 +92,7 @@ ig_feature_columns = [
 
 print("\nInstagram feature columns found:", len(ig_feature_columns))
 
-# =========================================================
 # VALIDATE NUMERIC FEATURE TYPES
-# =========================================================
 
 numeric_ig_columns = []
 
@@ -129,9 +113,7 @@ if len(non_numeric_ig_columns) > 0:
     print("\nNon-numeric Instagram columns:")
     print(non_numeric_ig_columns)
 
-# =========================================================
 # MERGE INSTAGRAM ONTO MASTER CALENDAR
-# =========================================================
 
 merged = master.merge(
     ig,
@@ -141,9 +123,7 @@ merged = master.merge(
 
 print("\nMerged shape:", merged.shape)
 
-# =========================================================
 # CREATE INSTAGRAM ACTIVITY FLAG
-# =========================================================
 
 if "ig_posts_count" in merged.columns:
 
@@ -156,25 +136,13 @@ if "ig_posts_count" in merged.columns:
 else:
     merged["ig_activity_day"] = 0
 
-# =========================================================
 # FILL OPERATIONAL NO-ACTIVITY DAYS WITH ZEROS
-# =========================================================
-# Important semantic meaning:
-#
-# Missing Instagram rows inside operational calendar
-# mean:
-# "No Instagram activity happened that day."
-#
-# Therefore:
-# numeric operational IG features should become 0.
 
 for col in numeric_ig_columns:
 
     merged[col] = merged[col].fillna(0)
 
-# =========================================================
 # VALIDATION AFTER MERGE
-# =========================================================
 
 print("\n" + "=" * 80)
 print("VALIDATION AFTER INSTAGRAM MERGE")
@@ -191,9 +159,7 @@ print("Missing sale_date values:",
 if merged["sale_date"].duplicated().sum() > 0:
     raise ValueError("Duplicate dates created after Instagram merge.")
 
-# =========================================================
 # VALIDATE ROW PRESERVATION
-# =========================================================
 
 original_master_rows = len(master)
 
@@ -207,9 +173,7 @@ if original_master_rows == merged_rows:
 else:
     raise ValueError("Master calendar row count changed after merge.")
 
-# =========================================================
 # VALIDATE INSTAGRAM TOTALS PRESERVED
-# =========================================================
 
 print("\n" + "=" * 80)
 print("INSTAGRAM FEATURE TOTAL VALIDATION")
@@ -246,9 +210,7 @@ for col in important_validation_columns:
         f"difference: {difference}"
     )
 
-# =========================================================
 # INSPECT OPERATIONAL NO-ACTIVITY DAYS
-# =========================================================
 
 print("\n" + "=" * 80)
 print("INSTAGRAM OPERATIONAL ACTIVITY ANALYSIS")
@@ -260,9 +222,7 @@ print("Operational days with Instagram activity:",
 print("Operational days with NO Instagram activity:",
       len(merged) - merged["ig_activity_day"].sum())
 
-# =========================================================
 # FINAL NULL INSPECTION
-# =========================================================
 
 print("\n" + "=" * 80)
 print("FINAL NULL INSPECTION")
@@ -277,9 +237,7 @@ if len(remaining_nulls) == 0:
 else:
     print(remaining_nulls)
 
-# =========================================================
 # PREVIEW OUTPUT
-# =========================================================
 
 print("\n" + "=" * 80)
 print("PREVIEW OF MERGED DATASET")
@@ -289,9 +247,7 @@ print(merged.head())
 
 print("\nFinal column count:", len(merged.columns))
 
-# =========================================================
 # SAVE FILE
-# =========================================================
 
 merged["sale_date"] = merged["sale_date"].dt.strftime("%Y-%m-%d")
 
