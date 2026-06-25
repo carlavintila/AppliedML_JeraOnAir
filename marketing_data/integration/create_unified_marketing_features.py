@@ -1,10 +1,8 @@
 import pandas as pd
 import numpy as np
 
-# =========================================================
 # STEP 3:
 # CREATE UNIFIED ONLINE MARKETING FEATURES
-# =========================================================
 
 input_file = "master_calendar_with_instagram_facebook_2022_2026.csv"
 output_file = "master_calendar_with_unified_marketing_2022_2026.csv"
@@ -17,9 +15,7 @@ print("=" * 80)
 
 print("\nInput shape:", df.shape)
 
-# =========================================================
 # DATE CHECK
-# =========================================================
 
 df["sale_date"] = pd.to_datetime(df["sale_date"], errors="coerce")
 
@@ -31,9 +27,7 @@ if df["sale_date"].duplicated().sum() > 0:
 
 print("Date validation: PASSED")
 
-# =========================================================
 # REQUIRED COLUMN CHECK
-# =========================================================
 
 required_cols = [
     "ig_posts_count",
@@ -64,18 +58,12 @@ if missing_cols:
 
 print("Required column check: PASSED")
 
-# =========================================================
 # MAKE SAFE NUMERIC COLUMNS
-# =========================================================
 
 for col in required_cols:
     df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
 
-# =========================================================
 # INSTAGRAM ENGAGEMENT
-# =========================================================
-# Instagram does not have one ready total engagement column.
-# So we create it from available interaction metrics.
 
 df["ig_total_engagement_sum"] = (
     df["ig_likes_sum"]
@@ -84,9 +72,7 @@ df["ig_total_engagement_sum"] = (
     + df["ig_saves_sum"]
 )
 
-# =========================================================
 # UNIFIED CROSS-PLATFORM FEATURES
-# =========================================================
 
 # Total posting pressure
 df["marketing_total_posts"] = (
@@ -104,8 +90,7 @@ df["marketing_total_engagement"] = (
 )
 
 # Total visible/video exposure proxy
-# Facebook's stable historical view feature is video_views_3s.
-# Newer fb_total_views_sum is sparse, so we do NOT use it here.
+
 df["marketing_total_views_core"] = (
     df["ig_views_sum"] + df["fb_video_views_3s_sum"]
 )
@@ -125,9 +110,7 @@ df["marketing_total_shares"] = (
 df["marketing_total_clicks_known"] = df["fb_total_clicks_sum"]
 df["marketing_link_clicks_known"] = df["fb_link_clicks_sum"]
 
-# =========================================================
 # ACTIVITY FLAGS
-# =========================================================
 
 df["marketing_activity_day"] = np.where(
     df["marketing_total_posts"] > 0,
@@ -158,9 +141,7 @@ df["marketing_platforms_active_count"] = (
     + (df["fb_has_post"] > 0).astype(int)
 )
 
-# =========================================================
 # AVERAGE PER POST UNIFIED FEATURES
-# =========================================================
 
 df["marketing_avg_reach_per_post"] = np.where(
     df["marketing_total_posts"] > 0,
@@ -180,11 +161,7 @@ df["marketing_avg_views_per_post_core"] = np.where(
     0
 )
 
-# =========================================================
 # OPTIONAL META-AWARE FEATURE
-# =========================================================
-# This keeps Facebook Meta NaN logic.
-# It should only be available when fb_total_views_sum is available.
 
 if "fb_total_views_sum" in df.columns:
     df["marketing_total_views_meta_if_available"] = np.where(
@@ -193,9 +170,7 @@ if "fb_total_views_sum" in df.columns:
         np.nan
     )
 
-# =========================================================
 # VALIDATION
-# =========================================================
 
 print("\n" + "=" * 80)
 print("VALIDATION")
@@ -242,9 +217,7 @@ print(negative_counts)
 if any(value > 0 for value in negative_counts.values()):
     raise ValueError("Negative values found in unified marketing features.")
 
-# =========================================================
 # FINAL NULL CHECK
-# =========================================================
 
 print("\n" + "=" * 80)
 print("NULL CHECK")
@@ -258,9 +231,7 @@ if len(nulls) == 0:
 else:
     print(nulls)
 
-# =========================================================
 # SAVE FILE
-# =========================================================
 
 df["sale_date"] = df["sale_date"].dt.strftime("%Y-%m-%d")
 
