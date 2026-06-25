@@ -1,10 +1,10 @@
 import pandas as pd
 import numpy as np
 
-# =========================================================
+
 # STEP 1A:
 # BUILD MASTER TICKET OPERATIONAL CALENDAR
-# =========================================================
+
 
 ticket_files = {
     2022: "Ticket sales standard template 2022.xlsx",
@@ -30,9 +30,7 @@ print("=" * 80)
 print("STEP 1A: BUILD MASTER TICKET OPERATIONAL CALENDAR")
 print("=" * 80)
 
-# =========================================================
 # LOAD AND VALIDATE EACH YEAR
-# =========================================================
 
 for expected_year, file_name in ticket_files.items():
 
@@ -145,9 +143,7 @@ master = pd.concat(all_dfs, ignore_index=True)
 
 master = master.sort_values(["festival_year", "sale_date"]).reset_index(drop=True)
 
-# =========================================================
 # FINAL VALIDATION
-# =========================================================
 
 print("\n" + "=" * 80)
 print("FINAL MASTER TICKET CALENDAR VALIDATION")
@@ -192,10 +188,7 @@ print(covid_cycle["actual_calendar_year"].value_counts().sort_index())
 
 print("\nThis confirms that 2019–2021 dates belong to festival_year 2022.")
 
-# =========================================================
 # SAVE FILE
-# =========================================================
-
 # Save date as YYYY-MM-DD for clean merging later
 master["sale_date"] = master["sale_date"].dt.strftime("%Y-%m-%d")
 
