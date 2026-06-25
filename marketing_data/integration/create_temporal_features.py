@@ -1,12 +1,6 @@
 import pandas as pd
 import numpy as np
 
-# =========================================================
-# STEP 4 FIXED:
-# CREATE DISCIPLINED LAG AND ROLLING FEATURES
-# NO LEAKAGE ACROSS FESTIVAL YEARS
-# =========================================================
-
 input_file = "master_calendar_with_unified_marketing_2022_2026.csv"
 output_file = "master_calendar_with_temporal_features_2022_2026_FIXED.csv"
 
@@ -69,9 +63,7 @@ rolling_windows = [3, 7]
 for col in set(lag_features + rolling_features):
     df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
 
-# =========================================================
 # LAG FEATURES
-# =========================================================
 
 print("\nCreating lag features...")
 
@@ -81,9 +73,7 @@ for col in lag_features:
             df.groupby("festival_year")[col].shift(lag)
         )
 
-# =========================================================
 # FIXED ROLLING FEATURES
-# =========================================================
 
 print("Creating leakage-safe rolling features...")
 
@@ -96,9 +86,7 @@ for col in rolling_features:
             .transform(lambda s: s.shift(1).rolling(window=window, min_periods=1).sum())
         )
 
-# =========================================================
 # MOMENTUM FEATURES
-# =========================================================
 
 print("Creating momentum features...")
 
@@ -119,9 +107,7 @@ for col in momentum_base_features:
         0
     )
 
-# =========================================================
 # FILL START-OF-CYCLE NaNs
-# =========================================================
 
 temporal_cols = [
     col for col in df.columns
@@ -130,9 +116,7 @@ temporal_cols = [
 
 df[temporal_cols] = df[temporal_cols].fillna(0)
 
-# =========================================================
 # VALIDATION
-# =========================================================
 
 print("\n" + "=" * 80)
 print("VALIDATION")
@@ -195,9 +179,7 @@ else:
     print("Negative values found:")
     print(negative_cols)
 
-# =========================================================
 # SAVE FILE
-# =========================================================
 
 df["sale_date"] = df["sale_date"].dt.strftime("%Y-%m-%d")
 
